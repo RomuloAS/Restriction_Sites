@@ -1,8 +1,8 @@
-# Palindrome
+# Restriction Sites
 
-Palindrome is a tool to find palindromes in a text. It searches for words, it does not search for phrases.
+It finds restriction sites in a DNA sequence. Restriction sites are positions where restriction enzymes cut the DNA.
 
-A palindrome is a word, phrase, number or other sequence of units that can be read the same way in either direction. E.g. the word level, the number 1234321, the phrase Step on no pets.
+It use the respective restriction enzymes PpuMI, MspA1I and MslI.
 
 ------
 

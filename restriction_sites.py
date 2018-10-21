@@ -1,7 +1,7 @@
 import argparse
 import sys
-import time
 import re
+from tqdm import tqdm
 
 """
 Write a Python program, that finds restriction sites in a DNA sequence.
@@ -105,7 +105,8 @@ def search_restriction_sites(sequences):
 
     rest_sites = {}   
 
-    for key, value in sequences.items():
+    for key, value in tqdm(
+        sequences.items(), ascii=True, desc="Searching for restriction sites"):
         for enzyme, seq_cut in ENZYMES.items():
             rest_found = re.finditer(seq_cut["seq"], value)
             for rest in rest_found:
@@ -144,14 +145,13 @@ def write_file(r_sites, args):
         for enz_key, enz_value in seq_value.items():
             print("\t" + enz_key, file=args.outfile, end=": ")
             print(", ".join(str(v) for v in enz_value), file=args.outfile)
+        print("\n", file=args.outfile)
     print("\n------------------\n")
 
 
 if __name__ == "__main__":
-    start_time = time.time()
     args = getArgs()
     sequences = read_sequences(args)
     if sequences is not None:
         r_sites = search_restriction_sites(sequences)
     write_file(r_sites, args)
-    print(time.time() - start_time, "seconds")
