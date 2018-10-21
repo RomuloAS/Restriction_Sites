@@ -2,7 +2,7 @@
 
 It finds restriction sites in a DNA sequence. Restriction sites are positions where restriction enzymes cut the DNA.
 
-It use the respective restriction enzymes PpuMI, MspA1I and MslI.
+It uses the respective restriction enzymes PpuMI, MspA1I and MslI.
 
 ------
 
@@ -20,19 +20,19 @@ pip install tqdm
 ## Usage
 
 ```
-palindrome.py [-h] [-o OUTFILE] infile
+restriction_sites.py [-h] [-o OUTFILE] infile
 ```
 Positional arguments:
 
->`infile`              A file with a text to search for palindromes
+>`infile`              A fasta file with DNA sequences.
 
 Optional arguments:
 
 >`-h`, `--help`           show a help message<br>
->`-o OUTFILE`, `--outfile OUTFILE`   Output file to save all palindromes found (*default:print on terminal*)
+>`-o OUTFILE`, `--outfile OUTFILE`   Output file to save all restriction sites found (*default:print on terminal*)
 
 ```
-palindrome.py palindrome.txt -o palindromes_found.txt
+restriction_sites.py sequences.fasta -o restriction_sites_found.txt
 ```
 
 ------

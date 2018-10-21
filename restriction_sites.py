@@ -52,7 +52,7 @@ def getArgs():
 
     parser = argparse.ArgumentParser(description='It finds restriction sites in a DNA sequence.')
     parser.add_argument('infile', type=argparse.FileType('r'),
-                   help='A file with aa DNA sequence.')
+                   help='A fasta file with DNA sequences.')
     parser.add_argument('-o', '--outfile', type=argparse.FileType('w'), default=sys.stdout,
                     help='Output file to save all restriction sites found (default: print on terminal)')
     
