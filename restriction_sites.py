@@ -1,7 +1,7 @@
 import argparse
 import sys
-from collections import OrderedDict
 import time
+import re
 
 """
 Write a Python program, that finds restriction sites in a DNA sequence.
@@ -32,7 +32,12 @@ Hint: For biologists the first base of a sequence is at position/index 1, not 0.
 References:
 https://docs.python.org/3.7/library/argparse.html
 https://docs.python.org/3.7/library/sys.html
+https://docs.python.org/3.7/library/re.html
 """
+
+ENZYMES = {"PpuMI": {"seq":"[AG]GG[AT]CC[CT]", "cut_pos": 3},
+            "MspA1I": {"seq":"C[AC]GC[GT]G", "cut_pos": 4},
+            "MslI": {"seq":"CA[CT][ACGT][ACGT][ACGT][ACGT][AG]TG", "cut_pos": 6}}
 
 def getArgs():
     """Get arguments from terminal
@@ -69,45 +74,52 @@ def read_sequences(args):
         Returns sequences
     """
 
-    fasta = args.infile.read()
+    try:
+        fasta = args.infile.read()
+    except UnicodeDecodeError:
+        print("\nThe file is in an unrecognized format\n")
+        return None
     fasta = list(filter(None,fasta.split(">")))
     sequences = {f.split("\n", 1)[0]: "".join(
                 f.split("\n", 1)[1].split("\n")) for f in fasta}
         
     return sequences
 
-def searchPalindromes(args):
-    """Search for palindromes in the text file
+def search_restriction_sites(sequences):
+    """Search for restriction sites in the fasta file
 
-    This function search for palindromes in the text.
-    It searches for words, it does not search for phrases.
+    This function search for restriction sites in the fasta file.
+    It searches for patterns recognized by restriction enzymes.
 
 
     Parameters
     -------------
-    args : arguments
+    sequences : dict
         First argument
 
     Returns
     -------------
     list
-        Returns palindromes
+        Returns rest_sites
     """
 
-    text = args.infile.read()
-    words = text.split()
-    palindromes = []    
-    
-    for word in tqdm(words, ascii=True, desc="Searching for palindromes"):
-        word = hyphenated(word.lower())
-        if len(word) > 1:
-            reverse = word[::-1]
-            if word == reverse:
-                palindromes.append(word)
+    rest_sites = {}   
 
-    return palindromes
+    for key, value in sequences.items():
+        for enzyme, seq_cut in ENZYMES.items():
+            rest_found = re.finditer(seq_cut["seq"], value)
+            for rest in rest_found:
+                if(key in rest_sites):
+                    if(enzyme in rest_sites[key]):
+                        rest_sites[key][enzyme].append(rest.start() + seq_cut["cut_pos"])
+                    else:
+                        rest_sites[key][enzyme] = [rest.start() + seq_cut["cut_pos"]]
+                else:
+                    rest_sites[key] = {enzyme: [rest.start() + seq_cut["cut_pos"]]}
 
-def writeFile(r_sites, args):
+    return rest_sites
+
+def write_file(r_sites, args):
     """Write all restriction sites found to an output file
 
     Write restriction sites to an output file or to the terminal according
@@ -116,18 +128,22 @@ def writeFile(r_sites, args):
 
     Parameters
     -------------
-    r_sites : list
+    r_sites : dict
         First argument
     args: argument
         Second argument
     """
 
-    if len(r_enzymes) == 0:
+    if len(r_sites) == 0:
         print("\nRestriction sites not found\n")
         return ""
 
     print("\n------------------")
-    args.outfile.write("\n".join(r_enzymes))
+    for seq_key, seq_value in r_sites.items():
+        print(seq_key, file=args.outfile)
+        for enz_key, enz_value in seq_value.items():
+            print("\t" + enz_key, file=args.outfile, end=": ")
+            print(", ".join(str(v) for v in enz_value), file=args.outfile)
     print("\n------------------\n")
 
 
@@ -135,4 +151,7 @@ if __name__ == "__main__":
     start_time = time.time()
     args = getArgs()
     sequences = read_sequences(args)
+    if sequences is not None:
+        r_sites = search_restriction_sites(sequences)
+    write_file(r_sites, args)
     print(time.time() - start_time, "seconds")
