@@ -1,20 +1,37 @@
 import argparse
 import sys
-from tqdm import tqdm
+from collections import OrderedDict
+import time
 
-"""A palindrome is a word, phrase, number or other sequence of units that
-can be read the same way in either direction. E.g. the word level, the number 1234321, the
-phrase Step on no pets.
-Write a Python program, that reads a text file and searches for all palindromes in this file. The
-program should write all found palindromes (except phrases), together with their multiplicity to
-an output file. Handle all strings case insensitive, i.e. the word Level is also a palindrome. Both
-input and output files should be specified as command line arguments. Copy some arbitrary text
-(e.g. from the internet) and apply your program to it.
+"""
+Write a Python program, that finds restriction sites in a DNA sequence.
+Restriction sites are positions where restriction enzymes cut the DNA. They are usually recog-
+nised by a short, specific sequence motif.
+The respective sequences for the restriction enzymes PpuMI, MspA1I and MslI are defined as:
+
+PpuMI RG^GWCCY
+MspA1I CMG^CKG
+MslI CAYNN^NNRTG
+
+Note: K stands for {G, T}, M for {A, C}, N for {A, C, G, T}, R for {A, G}, W for {A, T}
+and Y is short for {C, T}. The caret (^) indicates the cut site.
+Given a file with DNA sequences apply regular expressions to look for all restriction sites of
+these three enzymes and print the position after the cutting site to an output file (e.g. the position
+of the G for PpuMI). Make sure that the names of the input and output files can be specified as
+command line arguments and exactly two command line arguments have been specified.
+Use the UCSC Genome Browser (https://genome.ucsc.edu/) in order to download the
+DNA sequence from the human reference genome version hg38 of chromosome 22 band q13.1
+(chr22 bp 37200001-40600000). The resulting file serves as the input of your program,
+whereas the header line should be skipped programmatically.
+Many restriction enzymes exhibit so called palindromic recognition sequences. Read up what
+palindromic means in the context of DNA sequences. Which of the three enzymes listed above
+exhibits such a palindromic recognition sequence (argument your choice)? What is the advant-
+age of a palindromic recognition sequence?
+Hint: For biologists the first base of a sequence is at position/index 1, not 0.
 
 References:
 https://docs.python.org/3.7/library/argparse.html
 https://docs.python.org/3.7/library/sys.html
-https://github.com/tqdm/tqdm
 """
 
 def getArgs():
@@ -28,52 +45,36 @@ def getArgs():
         Returns parse_args
     """
 
-    parser = argparse.ArgumentParser(description='It searches for all palindromes in the file.')
+    parser = argparse.ArgumentParser(description='It finds restriction sites in a DNA sequence.')
     parser.add_argument('infile', type=argparse.FileType('r'),
-                   help='A file with a text to search for palindromes.')
+                   help='A file with aa DNA sequence.')
     parser.add_argument('-o', '--outfile', type=argparse.FileType('w'), default=sys.stdout,
-                    help='Output file to save all palindromes found (default: print on terminal)')
+                    help='Output file to save all restriction sites found (default: print on terminal)')
     
     return parser.parse_args()
 
-def hyphenated(word):
-    """Remove special characters(non alphanumeric) from the string
+def read_sequences(args):
+    """Read sequences from fasta file
 
-    This function remove all non alphanumeric characters from the string,
-    and it test if it is a hyphenated word.
+    This function read all dna sequences in the file to a dictionary.
 
     Parameters
     -------------
-    word : string
+    args : arguments
         First argument
 
     Returns
     -------------
     string
-        Returns word_corrected
+        Returns sequences
     """
 
-    found = False # True when find a non alphanumeric
-    word_corrected = ""
-    first = True # check symbols in the first position
-    for letter in word:        
-        if letter.isalnum():
-            word_corrected += letter
-            found = False
-            first = False        
-        else:
-            if found:
-                return word_corrected[:-1]
-            if first:
-                continue
-            word_corrected += letter
-            found = True
-            first = False
-    else:
-        if found:
-            return word_corrected[:-1]    
+    fasta = args.infile.read()
+    fasta = list(filter(None,fasta.split(">")))
+    sequences = {f.split("\n", 1)[0]: "".join(
+                f.split("\n", 1)[1].split("\n")) for f in fasta}
         
-    return word_corrected
+    return sequences
 
 def searchPalindromes(args):
     """Search for palindromes in the text file
@@ -106,31 +107,32 @@ def searchPalindromes(args):
 
     return palindromes
 
-def writeFile(palindromes, args):
-    """Write all palindromes found to an output file
+def writeFile(r_sites, args):
+    """Write all restriction sites found to an output file
 
-    Write palindromes to an output file or to the terminal according
+    Write restriction sites to an output file or to the terminal according
     to the --output argument
 
 
     Parameters
     -------------
-    palindromes : list
+    r_sites : list
         First argument
     args: argument
         Second argument
     """
 
-    if len(palindromes) == 0:
-        print("\nPalindrome not found\n")
+    if len(r_enzymes) == 0:
+        print("\nRestriction sites not found\n")
         return ""
 
     print("\n------------------")
-    args.outfile.write("\n".join(palindromes))
+    args.outfile.write("\n".join(r_enzymes))
     print("\n------------------\n")
 
 
 if __name__ == "__main__":
+    start_time = time.time()
     args = getArgs()
-    palindromes = searchPalindromes(args)
-    writeFile(palindromes, args)
+    sequences = read_sequences(args)
+    print(time.time() - start_time, "seconds")
